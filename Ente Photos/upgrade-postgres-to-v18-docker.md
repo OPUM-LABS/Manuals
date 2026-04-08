@@ -12,16 +12,16 @@ docker exec -t $(docker compose ps -q postgres) pg_dumpall -c -U ${pg_user} > /a
 
 1. **Stop the stack:**
 
-```Bash:
-docker compose down
-```
+    ```Bash:
+    docker compose down
+    ```
 
 2. **Move the old data:** Postgres 18 cannot read your old files directly.
 
-```Bash:
-mv /appdata/ente_photos/db /appdata/ente_photos/db_v15_bak
-mkdir /appdata/ente_photos/db
-```
+    ```Bash:
+    mv /appdata/ente_photos/db /appdata/ente_photos/db_v15_bak
+    mkdir /appdata/ente_photos/db
+    ```
 
 ### Step 3: Update your `compose.yaml` 
 
@@ -45,7 +45,7 @@ postgres:
     timeout: 5s
     retries: 5
   volumes:
-    #                                            ⬇️⬇️⬇️⬇️⬇️
+    #                 remove this subdirectory:  ⬇️⬇️⬇️⬇️⬇️
     - /appdata/ente_photos/db:/var/lib/postgresql
 ```
 
@@ -53,26 +53,28 @@ postgres:
 
 1. **Start the Database only:**
 
-```Bash:
-docker compose up -d postgres
-```
+    ```Bash:
+    docker compose up -d postgres
+    ```
 
-2. **Import the data:** (Wait ~10 seconds for it to initialize first)
+2. **Import the data:**
 
-```Bash:
-cat /appdata/ente_photos/postgres_full_backup.sql | docker exec -i $(docker compose ps -q postgres) psql -U ${pg_user}
-```
+   (Wait ~10 seconds for it to initialize first)
 
-3. **The "2026 Cleanup" (Collation Fix):** 
+    ```Bash:
+    cat /appdata/ente_photos/postgres_full_backup.sql | docker exec -i $(docker compose ps -q postgres) psql -U ${pg_user}
+    ```
+
+3. **Cleanup" (Collation Fix):** 
 Run these to ensure your photo metadata sorts correctly under the new version:
 
-```Bash:
-docker exec -it $(docker compose ps -q postgres) psql -U ${pg_user} -d ${pg_db} -c "REINDEX DATABASE ${pg_db};"
-docker exec -it $(docker compose ps -q postgres) psql -U ${pg_user} -d ${pg_db} -c "ALTER DATABASE ${pg_db} REFRESH COLLATION VERSION;"
-```
+    ```Bash:
+    docker exec -it $(docker compose ps -q postgres) psql -U ${pg_user} -d ${pg_db} -c "REINDEX DATABASE ${pg_db};"
+    docker exec -it $(docker compose ps -q postgres) psql -U ${pg_user} -d ${pg_db} -c "ALTER DATABASE ${pg_db} REFRESH COLLATION VERSION;"
+    ```
 
 4. **Launch the full stack:**
 
-```Bash
-docker compose up -d
-```
+  ```Bash
+  docker compose up -d
+  ```
