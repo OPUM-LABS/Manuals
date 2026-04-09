@@ -65,6 +65,8 @@ Save as `compose.yaml`. This version removes `socat` and connects Ente directly 
 
 I'm using a mix of macvlan (public facing) and internal docker bridge (only internal). I've also moved to postgres 18, in your case it's maybe 15.
 
+If you want to upgrade, you can use this guide: [Upgrade Postgres to v18](https://github.com/OPUM-LABS/Manuals/blob/main/Ente%20Photos/upgrade-postgres-to-v18-docker.md)
+
 ```YAML
 services:
   museum:
