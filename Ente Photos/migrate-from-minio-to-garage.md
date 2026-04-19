@@ -175,7 +175,7 @@ After starting the container (`docker compose up -d`), run these commands to set
       
     ```Bash  
     
-        docker exec -it garage /garage bucket allow --read --write --owner b2-eu-cen --key ente-key
+    docker exec -it garage /garage bucket allow --read --write --owner b2-eu-cen --key ente-key
     ```
 4.  Apply CORS Rules (Critical for Web App)  
     Create a file `cors.json` locally:  
@@ -359,7 +359,47 @@ rclone lsd garage:
 ```
 If both commands return a list showing `b2-eu-cen`, your connection is perfect and you are ready to copy.
 
-1.  **Start "Rescue" MinIO:** Mount your backup folder to a temporary MinIO container.
+1.  **Start "Rescue" MinIO:** Mount your backup folder to a temporary MinIO container. Here is an example:
+    ```YAML
+    services:
+      minio:
+        image: minio/minio
+        restart: unless-stopped
+        networks:
+          macvlan_net:
+            ipv4_address: 10.1.1.67
+            mac_address: 02:00:00:00:00:67
+        dns:
+          - 10.10.10.1
+        ports:
+          - 3200:3200
+          - 3201:3201
+        environment:
+          MINIO_ROOT_USER: $minio_user
+          MINIO_ROOT_PASSWORD: $minio_pass
+          PUID: 65534
+          PGID: 100
+        command: server /data --address ":3200" --console-address ":3201"
+        volumes:
+          - /mnt/Media/Pictures/ente_photos_bak:/data
+        post_start:
+          - command: >
+              sh -c '
+              #!/bin/sh
+              while ! mc alias set h0 http://minio:3200 $minio_user $minio_pass 2>/dev/null
+              do
+                echo "Waiting for minio..."
+                sleep 0.5
+              done
+              cd /data
+              mc mb -p b2-eu-cen
+              mc mb -p wasabi-eu-central-2-v3
+              mc mb -p scw-eu-fr-v3
+              '
+    networks:
+      macvlan_net:
+        external: true
+    ```
     
 2.  **Configure Rclone:** Point `[minio]` to the Rescue container and `[garage]` to Garage.
     
