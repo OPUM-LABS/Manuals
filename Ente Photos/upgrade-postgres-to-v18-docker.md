@@ -1,14 +1,15 @@
 # Upgrade Postgres to v18 (Docker)
 
-### Step 1: Backup While your current postgres instance is running, generate the dump.
+### 1. Backup
 
+While your current postgres instance is running, generate the dump:
 ```Bash:
 docker exec -t $(docker compose ps -q postgres) pg_dumpall -c -U ${pg_user} > /appdata/ente_photos/postgres_full_backup.sql
 ```
 
 *Note: If `${pg_user}` doesn't resolve in your shell, just type the actual username you use for Ente (often `pguser`).
 
-### Step 2: Preparation
+### 2. Preparation
 
 1. **Stop the stack:**
 
@@ -16,14 +17,15 @@ docker exec -t $(docker compose ps -q postgres) pg_dumpall -c -U ${pg_user} > /a
     docker compose down
     ```
 
-2. **Move the old data:** Postgres 18 cannot read your old files directly.
+2. **Move the old data:**
 
+   (Because Postgres 18 cannot read your old files directly)
     ```Bash:
     mv /appdata/ente_photos/db /appdata/ente_photos/db_v15_bak
     mkdir /appdata/ente_photos/db
     ```
 
-### Step 3: Update your `compose.yaml` 
+### 3. Update your `compose.yaml` 
 
 You need to change the *image* and, most importantly, the *volume mount point*. Postgres 18 now expects to manage the parent directory.
 
@@ -49,7 +51,7 @@ postgres:
     - /appdata/ente_photos/db:/var/lib/postgresql
 ```
 
-### Step 4: Restore and Reindex
+### 4. Restore and Reindex
 
 1. **Start the Database only:**
 
