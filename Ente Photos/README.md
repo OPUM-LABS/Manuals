@@ -1,3 +1,5 @@
+<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/ente-photos.svg" alt="Alt Text" style="width:10%; height:auto;">
+
 # [Ente Photos](https://ente.com/de/)
 
 - [Migrate from MinIO to Garage](migrate-from-minio-to-garage.md)
