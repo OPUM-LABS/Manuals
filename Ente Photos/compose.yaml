@@ -1,0 +1,81 @@
+services:
+  museum:
+    image: ghcr.io/ente-io/server
+    restart: unless-stopped
+    networks:
+      ente_internal: null
+      macvlan_net:
+        ipv4_address: 10.1.1.64
+        mac_address: 02:00:00:00:00:64
+    dns:
+      - 10.10.10.1
+    ports:
+      - 8080:8080
+    environment:
+      seaweedfs_user: ${seaweedfs_user}
+      seaweedfs_pass: ${seaweedfs_pass}
+      POSTGRES_USER: ${pg_user}
+      POSTGRES_PASSWORD: ${pg_pass}
+      POSTGRES_DB: ${pg_db}
+      museum_key: ${museum_key}
+      museum_hash: ${museum_hash}
+      museum_jwt_secret: ${museum_jwt_secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      garage:
+        condition: service_started
+    volumes:
+      - /appdata/ente_photos/museum/museum.yaml:/museum.yaml:ro
+      - /appdata/ente_photos/museum/data:/data:ro
+  web:
+    image: ghcr.io/ente-io/web
+    restart: unless-stopped
+    network_mode: service:museum
+    environment:
+      ENTE_API_ORIGIN: https://photo.domain.com
+      ENTE_ALBUMS_ORIGIN: https://photo-pub.domain.com
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${pg_user}
+      POSTGRES_PASSWORD: ${pg_pass}
+      POSTGRES_DB: ${pg_db}
+    networks:
+      - ente_internal
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -d ${pg_db} -U ${pg_user}
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - /appdata/ente_photos/db:/var/lib/postgresql
+  garage:
+    image: dxflrs/garage:v2.2.0
+    container_name: garage
+    restart: unless-stopped
+    networks:
+      ente_internal: null
+      macvlan_net:
+        ipv4_address: 10.1.1.65
+        mac_address: 02:00:00:00:00:65
+    dns:
+      - 10.10.10.1
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - /appdata/ente_photos/garage/config/garage.toml:/etc/garage.toml
+      - /appdata/ente_photos/garage/meta:/var/lib/garage/meta
+      - /mnt/Fast_Media/Pictures/ente_photos/garage_data:/var/lib/garage/data
+    ports:
+      - 3900:3900 # S3 API
+      - 3902:3902 # Web UI
+networks:
+  ente_internal:
+    driver: bridge
+    internal: true
+  macvlan_net:
+    external: true
