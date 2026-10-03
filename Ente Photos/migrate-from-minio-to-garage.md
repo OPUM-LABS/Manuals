@@ -1,3 +1,11 @@
+> [!WARNING]
+> **Official minIO replacement:**
+> In the meantime, there is a free fork of the last open version of minIO: Silo.
+> Follow the official instructions, but in general you just have to change the image to "pgsty/silo:latest" and redeploy the stack.
+> You can still use this guide if you prefer Garage.
+
+
+
 # Migrate from MinIO to Garage
 
 This tutorial is based on my setup. So don't just copy and paste my code-blocks, as you may have to change some paths to match your setup.
